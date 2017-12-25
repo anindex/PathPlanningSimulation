@@ -1,7 +1,8 @@
 import java.util.Iterator;
 
 Grid grid;
-BasicTheta planner;
+BasicTheta thetaPlanner;
+AStar astarPlanner;
 
 public static final int RESOLUTION = 20;
 boolean started = true;
@@ -24,12 +25,16 @@ void setup()
   start = grid.nodes[1][1];
   goal = grid.nodes[14][14];
   
-  planner = new BasicTheta(grid, 2, start.coordinate, goal.coordinate);
-  planner.start();
+  thetaPlanner = new BasicTheta(grid, 2, start.coordinate, goal.coordinate);
+  astarPlanner = new AStar(grid, 2, start.coordinate, goal.coordinate);
+  
+  thetaPlanner.start();
+  astarPlanner.start();
   
   try
   {
-    planner.join();
+    thetaPlanner.join();
+    astarPlanner.join();
   }
   catch(Exception e)
   {}
@@ -41,9 +46,10 @@ void draw()
   if(started)
   {
      grid.drawMap();
-     if(planner.path != null) grid.drawPath(planner.path);
-     grid.drawNodeColor(planner.robot.start.coordinate, ObjectColor.START);
-     grid.drawNodeColor(planner.robot.goal.coordinate, ObjectColor.GOAL);
+     if(thetaPlanner.path != null) grid.drawPath(thetaPlanner.path);
+     if(astarPlanner.path != null) grid.drawPath(astarPlanner.path);
+     grid.drawNodeColor(thetaPlanner.robot.start.coordinate, ObjectColor.START);
+     grid.drawNodeColor(thetaPlanner.robot.goal.coordinate, ObjectColor.GOAL);
   }
  
 }
