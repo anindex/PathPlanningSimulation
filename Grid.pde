@@ -34,7 +34,7 @@ class Grid
  GridMode gridMode;
  
  public static final int NODESIZE = 2;
- public static final float SIGHT_THRESHOLD = 5.0;
+ public static final float SIGHT_THRESHOLD = 50.0;
  public static final float COST_STEP = 1.0;
  public static final float MAX_COST = 50.0;
  
@@ -126,41 +126,50 @@ class Grid
    }
  }
  
- private void drawNodeColor(Node pos, ObjectColor objColor)
+ public void drawNodeColor(PVector pos, ObjectColor objColor)
  {
    fill(objColor.getColor());
-   ellipse(int(pos.coordinate.x), int(pos.coordinate.y), NODESIZE * 3, NODESIZE * 3);
+   ellipse(int(pos.x), int(pos.y), NODESIZE * 3, NODESIZE * 3);
  }
  
- public Node[] extractPath(Node start, Node goal) // all search algorithm from goal
+ public PVector[] extractPath(PVector start, PVector goal) // all search algorithm from goal
  {  
-   ArrayList<Node> pathNodes = new ArrayList<Node>();
-   Node current = goal;
-   while(current != start)
+   ArrayList<PVector> pathNodes = new ArrayList<PVector>();
+   Node current = this.nodes[int(start.x / res)][int(start.y / res)];
+   Node goalNode = this.nodes[int(goal.x / res)][int(goal.y / res)];
+   while(current != goalNode)
    {
-     pathNodes.add(current);
+     pathNodes.add(current.coordinate);
      Node next = current.parent;
      if(next == null)
      {
        println("Could not extract path. Path is broken! Exiting");
        return null;
      }  
+     
+     if(next == current)
+     {
+       println("Path loop detected. Path is corrupted! Exiting");
+       return null;
+     }
      current = next;
    }
    
-   pathNodes.add(start);
+   pathNodes.add(goalNode.coordinate);
    
-   Node[] result = new Node[pathNodes.size()];
+   PVector[] result = new PVector[pathNodes.size()];
    pathNodes.toArray(result);
    return result;
  }
  
- public void drawPath(Node[] pathNodes)
+ public void drawPath(PVector[] path)
  {
+   if (path == null) return;
+   
    stroke(ObjectColor.PATH.getColor());
-   for(int i = 0; i < pathNodes.length - 1; i++)
+   for(int i = 0; i < path.length - 1; i++)
    {
-     line(int(pathNodes[i].coordinate.x), int(pathNodes[i].coordinate.y), int(pathNodes[i + 1].coordinate.x), int(pathNodes[i + 1].coordinate.y));
+     line(int(path[i].x), int(path[i].y), int(path[i + 1].x), int(path[i + 1].y));
    }
  }
   
@@ -197,18 +206,16 @@ class Grid
  {
    drawCells();
    drawNodes();
-   drawNodeColor(start, ObjectColor.START);
-   drawNodeColor(goal, ObjectColor.GOAL);
  }
  
- public Node[] neighborNodes(Node node, int mode) // mode = 0 -> NEIGHBOR 4, mode = 1 -> NEIGHBOR 8
+ public Node[] neighborNodes(Node node, int mode, boolean visible) // mode = 0 -> NEIGHBOR 4, mode = 1 -> NEIGHBOR 8
  {
    int colId = int(node.coordinate.x / res);
    int rowId = int(node.coordinate.y / res);
-   return neighborNodes(colId, rowId, mode);
+   return neighborNodes(colId, rowId, mode, visible);
  }
  
- public Node[] neighborNodes(int colId, int rowId, int mode)
+ public Node[] neighborNodes(int colId, int rowId, int mode, boolean visible)
  {
    ArrayList<Node> neighbors = new ArrayList<Node>();
    for(int i = -1; i < 2; i++)
@@ -224,6 +231,11 @@ class Grid
          }
          
          if((colId + i) < 0 || (rowId + j) < 0 || (colId + i) >= (cellCols + 1) || (rowId + j) >= (cellRows + 1))
+         {
+           continue;
+         }
+         
+         if(visible && cost(nodes[colId][rowId], nodes[colId + i][rowId + j]) > SIGHT_THRESHOLD)
          {
            continue;
          }
@@ -266,6 +278,29 @@ class Grid
          
          neighbors.add(cells[colId + i][rowId + j]);
        }
+   }
+   
+   Cell[] result = new Cell[neighbors.size()];
+   neighbors.toArray(result);
+   return result;
+ }
+ 
+ public Cell[] neighborCellsOfNode(Node pos, int range) // range should > 0
+ {
+   ArrayList<Cell> neighbors = new ArrayList<Cell>();
+   int posX = int(pos.coordinate.x / res);
+   int posY = int(pos.coordinate.y / res);
+   
+   for(int col = posX - range; col <= posX + range - 1; col++) // must offset -1 because cell coordinate at top left corner
+   {
+     if (col < 0 || col >= cellCols) continue;
+     
+     for(int row = posY - range; row <= posY + range - 1; row++)
+     {
+       if (row < 0 || row >= cellRows) continue;
+       
+       neighbors.add(cells[col][row]);
+     }
    }
    
    Cell[] result = new Cell[neighbors.size()];
@@ -525,6 +560,11 @@ class Grid
    }
  }
  
+ public float dist(Node source, Node target)
+ {
+   return source.dist(target) / res;
+ }
+ 
  public void leftMouseClicked(int mX, int mY)
  {
    Cell cell = retrieveCell(mX, mY);
@@ -538,7 +578,7 @@ class Grid
      if(cell.cost < MAX_COST)
      {
        cell.cost += COST_STEP; 
-       cell.gray = int(((cell.cost - 1.0) * 255 / (MAX_COST - 1.0))) ;
+       cell.gray = int(((MAX_COST - cell.cost) * 255 / (MAX_COST - 1.0))) ;
      }
      else
      {
@@ -618,7 +658,8 @@ class Grid
        }
        
        newGrid.nodes[col][row].g = this.nodes[col][row].g;
-       newGrid.nodes[col][row].h = this.nodes[col][row].h;
+       newGrid.nodes[col][row].rhs = this.nodes[col][row].rhs;
+       newGrid.nodes[col][row].f = this.nodes[col][row].f;
        
        newGrid.nodes[col][row].range.min = this.nodes[col][row].range.min;
        newGrid.nodes[col][row].range.max = this.nodes[col][row].range.max;

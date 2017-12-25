@@ -26,7 +26,8 @@ class Node
   public Node localParent;
   
   public float g;
-  public float h;
+  public float rhs;
+  public float f;
   
   public AngleRange range;
   
@@ -39,7 +40,8 @@ class Node
     localParent = null;
     
     g = Float.POSITIVE_INFINITY;
-    h = Float.POSITIVE_INFINITY;
+    rhs = Float.POSITIVE_INFINITY;
+    f = Float.POSITIVE_INFINITY;
     
     range = new AngleRange();
   }
@@ -56,9 +58,9 @@ class Node
     this.nodeColor = nodeColor;
   }
   
-  float dist(Node target)
+  float dist(Node target) // round to one decimal place for the ease of computation, will output distance based on pixel
   {
-    return target.coordinate != null ? coordinate.dist(target.coordinate) : -1.0;
+    return target.coordinate != null ? (round(coordinate.dist(target.coordinate) * 10) / 10) : -1.0;
   }
   
 }

@@ -1,4 +1,8 @@
+import java.util.Iterator;
+
 Grid grid;
+BasicTheta planner;
+
 public static final int RESOLUTION = 20;
 boolean started = true;
 Node start, goal;
@@ -7,11 +11,9 @@ void setup()
 {
   size(301, 301);
   
-  //noStroke();
-  
   try
   {
-    grid = new Grid(width, height, RESOLUTION, GridMode.RANDOMCOST);
+    grid = new Grid(width, height, RESOLUTION, GridMode.BINARY);
   }
   catch (InvalidResolution e)
   {
@@ -19,11 +21,19 @@ void setup()
   }
   
   grid.randomCost(20);
+  start = grid.nodes[1][1];
+  goal = grid.nodes[14][14];
   
-  start = grid.nodes[15][2];
-  goal = grid.nodes[15][10];
+  planner = new BasicTheta(grid, 2, start.coordinate, goal.coordinate);
+  planner.start();
   
-  goal.parent = start;
+  try
+  {
+    planner.join();
+  }
+  catch(Exception e)
+  {}
+  
 }
 
 void draw()
@@ -31,8 +41,9 @@ void draw()
   if(started)
   {
      grid.drawMap();
-     grid.drawPath(start, goal);
-     //grid.drawArrows(ArrowMode.REMOTE);
+     if(planner.path != null) grid.drawPath(planner.path);
+     grid.drawNodeColor(planner.robot.start.coordinate, ObjectColor.START);
+     grid.drawNodeColor(planner.robot.goal.coordinate, ObjectColor.GOAL);
   }
  
 }
@@ -42,7 +53,6 @@ void mouseClicked()
   if(mouseButton == LEFT)
   {
     grid.leftMouseClicked(mouseX, mouseY);
-    println(grid.lineOfSight(start, goal));
   }
   else if(mouseButton == RIGHT)
   {
