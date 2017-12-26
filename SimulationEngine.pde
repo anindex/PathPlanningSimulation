@@ -3,6 +3,7 @@ import java.util.Iterator;
 Grid grid;
 BasicTheta thetaPlanner;
 AStar astarPlanner;
+Phi phiPlanner;
 
 public static final int RESOLUTION = 20;
 boolean started = true;
@@ -25,16 +26,19 @@ void setup()
   start = grid.nodes[1][1];
   goal = grid.nodes[14][14];
   
-  thetaPlanner = new BasicTheta(grid, 2, start.coordinate, goal.coordinate);
-  astarPlanner = new AStar(grid, 2, start.coordinate, goal.coordinate);
+  //thetaPlanner = new BasicTheta(grid, 2, start.coordinate, goal.coordinate);
+  //astarPlanner = new AStar(grid, 2, start.coordinate, goal.coordinate);
+  phiPlanner = new Phi(grid, 2, start.coordinate, goal.coordinate);
   
-  thetaPlanner.start();
-  astarPlanner.start();
+  //thetaPlanner.start();
+  //astarPlanner.start();
+  phiPlanner.start();
   
   try
   {
-    thetaPlanner.join();
-    astarPlanner.join();
+    //thetaPlanner.join();
+    //astarPlanner.join();
+    phiPlanner.join();
   }
   catch(Exception e)
   {}
@@ -46,10 +50,11 @@ void draw()
   if(started)
   {
      grid.drawMap();
-     if(thetaPlanner.path != null) grid.drawPath(thetaPlanner.path);
-     if(astarPlanner.path != null) grid.drawPath(astarPlanner.path);
-     grid.drawNodeColor(thetaPlanner.robot.start.coordinate, ObjectColor.START);
-     grid.drawNodeColor(thetaPlanner.robot.goal.coordinate, ObjectColor.GOAL);
+     //if(thetaPlanner.path != null) grid.drawPath(thetaPlanner.path);
+     //if(astarPlanner.path != null) grid.drawPath(astarPlanner.path);
+     if(phiPlanner.path != null) grid.drawPath(phiPlanner.path);
+     grid.drawNodeColor(phiPlanner.robot.start.coordinate, ObjectColor.START);
+     grid.drawNodeColor(phiPlanner.robot.goal.coordinate, ObjectColor.GOAL);
   }
  
 }

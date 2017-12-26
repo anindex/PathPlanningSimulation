@@ -195,3 +195,115 @@ class AStar extends Thread implements PathPlanner
     path = robot.knownMap.extractPath(robot.start.coordinate, robot.goal.coordinate);
   }
 }
+
+
+
+class Phi extends Thread implements PathPlanner 
+{ 
+  public PriorityQueue<Node> open; // public for display purpose
+  public Vector<Node> closed;
+    
+  public PVector[] path;
+  
+  Grid environment;
+  Agent robot;
+  
+  public Phi(Grid environment, int sensorRange, PVector start, PVector goal)
+  {
+    this.environment = environment;
+    
+    robot =  new Agent(environment, sensorRange, start, goal);
+    
+    Comparator<Node> nodeComparer = new NodeComparator();
+    open = new PriorityQueue<Node>(10, nodeComparer);
+    closed = new Vector<Node>();
+  }
+  
+  private void UpdateVertex(Node s, Node t)
+  {
+    float gold = t.g;
+    ComputeCost(s, t);
+    if(t.g < gold)
+    {
+      if(open.contains(t)) open.remove(t);
+      t.f = t.g + t.dist(robot.start);
+      open.add(t);
+    }
+  }
+  
+  private void ComputeCost(Node s, Node t)
+  {
+    float a = robot.knownMap.angle(s, s.parent, t);
+    if(int(round(degrees(a))) % 45 != 0 && a >= s.range.min && a <= s.range.max && robot.knownMap.lineOfSight(s.parent, t))
+    {
+      
+      float newCost = s.parent.g + robot.knownMap.dist(s.parent, t);
+      if(newCost < t.g)
+      {
+        t.parent = s.parent;
+        t.localParent = s;
+        t.g = newCost;
+          
+        float l = Float.POSITIVE_INFINITY, h = -1;
+        for(Node next : robot.knownMap.neighborNodes(t, 0, false))
+        {
+          float current = robot.knownMap.angle(t, s.parent, next);
+          if (current > h) h = current;
+          if (current < l) l = current;
+        }
+          
+        t.range.min = max(l, s.range.min - a);
+        t.range.max = min(h, s.range.max - a);
+      }      
+    }
+    else
+    {
+      float newCost = s.g + robot.knownMap.dist(s, t);
+      if(newCost < t.g)
+      {
+        t.parent = s;
+        t.localParent = s;
+        t.g = newCost;
+        t.range.min = -(PI * 25) / 100; // PI / 4 rounded to 2 decimal places
+        t.range.max = (PI * 25) / 100;
+      }
+    }
+  }
+  
+  private void ComputeShortestPath()
+  {
+    Node current;
+    while(open.size() != 0 && open.peek().f < robot.start.g)
+    {
+      current = open.poll();
+      closed.add(current); //<>//
+      
+      Node[] neighbors = robot.knownMap.neighborNodes(current, 1, true);
+      if (neighbors.length == 0) //<>//
+      {
+        println("Compute Path failed because all paths are blocked!");
+        return;
+      }
+      
+      for(Node next : neighbors)
+      {
+        if(!closed.contains(next))
+        {
+          UpdateVertex(current, next); //<>//
+        }
+      }
+    }
+  }
+  
+  public void run()
+  {
+    robot.goal.g = 0.0;
+    robot.goal.parent = robot.goal;
+    robot.goal.localParent = robot.goal;
+    robot.goal.f = robot.goal.g + robot.knownMap.dist(robot.goal, robot.start);
+    open.add(robot.goal);
+
+    ComputeShortestPath();
+    path = robot.knownMap.extractPath(robot.start.coordinate, robot.goal.coordinate);
+  }
+}

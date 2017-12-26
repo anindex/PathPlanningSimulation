@@ -7,7 +7,10 @@ enum ObjectColor
   START(0xFF0000FF), 
   GOAL(0xFF00FF00), 
   ARROW(0xFFFFA500), 
-  PATH(0xFFFF0000);
+  PATH(0xFFFF0000),
+  THETAPATH(0xFFFA0A00),
+  ASTARPATH(0xFFFA000A),
+  PHIPATH(0xFFFA0A0A);
   
   private int value;
   private ObjectColor(int value)
@@ -47,11 +50,6 @@ class Grid
  private int cellCols;
  
  private int lastGray; // a hack for faster drawing in Processing
- 
- // for display purposes (maybe not needed)
- //public PVector agentPos;
- //public PVector startPos;
- //public PVector goalPos;
  
  Grid(int screenWidth, int screenHeight, int res, GridMode gridMode) throws InvalidResolution
  {
@@ -162,11 +160,11 @@ class Grid
    return result;
  }
  
- public void drawPath(PVector[] path)
+ public void drawPath(PVector[] path, color pathColor)
  {
    if (path == null) return;
    
-   stroke(ObjectColor.PATH.getColor());
+   stroke(pathColor);
    for(int i = 0; i < path.length - 1; i++)
    {
      line(int(path[i].x), int(path[i].y), int(path[i + 1].x), int(path[i + 1].y));
@@ -563,6 +561,19 @@ class Grid
  public float dist(Node source, Node target)
  {
    return source.dist(target) / res;
+ }
+ 
+ public float angle(Node s, Node p, Node t)
+ {
+   PVector line1 = PVector.sub(s.coordinate, p.coordinate);
+   PVector line2 = PVector.sub(t.coordinate, p.coordinate);
+   
+   return round(PVector.angleBetween(line1, line2) * 100) / 100.0;
+ }
+ 
+ public float angle(Node s, Node t)
+ {
+   return round(PVector.angleBetween(s.coordinate, t.coordinate) * 100) / 100.0;
  }
  
  public void leftMouseClicked(int mX, int mY)

@@ -7,8 +7,8 @@ class Node
     
     AngleRange()
     {
-      min = -PI;
-      max = PI;
+      min = -(PI * 100) / 100;
+      max = (PI * 100) / 100;
     }
     
     AngleRange(float min, float max)
