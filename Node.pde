@@ -1,4 +1,18 @@
-class Node
+public class Key
+  {
+    public float k1;
+    public float k2;
+    
+    Key(){}
+    Key(float k1, float k2)
+    {
+      this.k1 = k1;
+      this.k2 = k2;
+    }
+  }
+
+
+public class Node
 { 
   public class AngleRange
   {
@@ -28,6 +42,7 @@ class Node
   public float g;
   public float rhs;
   public float f;
+  public float minG;
   
   public AngleRange range;
   
@@ -42,6 +57,7 @@ class Node
     g = Float.POSITIVE_INFINITY;
     rhs = Float.POSITIVE_INFINITY;
     f = Float.POSITIVE_INFINITY;
+    minG = Float.POSITIVE_INFINITY;
     
     range = new AngleRange();
   }
@@ -56,6 +72,17 @@ class Node
   {
     this(coordinate);
     this.nodeColor = nodeColor;
+  }
+  
+  void updateKey(Key s)
+  {
+    f = s.k1;
+    minG = s.k2;
+  }
+  
+  Key returnKey()
+  {
+    return new Key(f, minG);
   }
   
   float dist(Node target) // round to one decimal place for the ease of computation, will output distance based on pixel

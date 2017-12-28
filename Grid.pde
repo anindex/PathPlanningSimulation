@@ -1,4 +1,5 @@
 import java.util.Random;
+import java.util.LinkedList;
 
 enum GridMode {BINARY, RANDOMCOST} // BINARY -> infinite cost untraversable cell, RANDOMCOST -> all cell are traversable but with specific cost
 enum ArrowMode {LOCAL, REMOTE}
@@ -160,6 +161,36 @@ class Grid
    return result;
  }
  
+ public LinkedList<PVector> extractLinkedPath(PVector start, PVector goal) // all search algorithm from goal
+ {  
+   LinkedList<PVector> pathNodes = new LinkedList<PVector>();
+   Node current = this.nodes[int(start.x / res)][int(start.y / res)];
+   Node goalNode = this.nodes[int(goal.x / res)][int(goal.y / res)];
+   while(current != goalNode)
+   {
+     pathNodes.add(current.coordinate);
+     
+     Node next = followDownCostField(current);
+     if(next == null)
+     {
+       println("Could not extract path. Path is broken! Exiting");
+       return null;
+     }  
+     
+     if(next == current)
+     {
+       println("Path loop detected. Path is corrupted! Exiting");
+       return null;
+     }
+     
+     current = next;
+   }
+   
+   pathNodes.add(goalNode.coordinate);
+   
+   return pathNodes;
+ }
+ 
  public void drawPath(PVector[] path, color pathColor)
  {
    if (path == null) return;
@@ -303,6 +334,28 @@ class Grid
    
    Cell[] result = new Cell[neighbors.size()];
    neighbors.toArray(result);
+   return result;
+ }
+ 
+ public Node followDownCostField(Node s)
+ {
+   float minCost = Float.POSITIVE_INFINITY;
+   Node result = null;
+   for(Node next : neighborNodes(s, 1, false))
+   {
+     float c = cost(s, next) + next.g;
+     if(minCost > c) 
+     {
+       minCost = c;
+       result = next;
+     }
+   }
+   
+   if (result == null)
+   {
+     println("Potential field at " + s.coordinate + " is corrupted! Could not get next lowest cost node!");
+   }
+   
    return result;
  }
  
@@ -671,6 +724,7 @@ class Grid
        newGrid.nodes[col][row].g = this.nodes[col][row].g;
        newGrid.nodes[col][row].rhs = this.nodes[col][row].rhs;
        newGrid.nodes[col][row].f = this.nodes[col][row].f;
+       newGrid.nodes[col][row].minG = this.nodes[col][row].minG;
        
        newGrid.nodes[col][row].range.min = this.nodes[col][row].range.min;
        newGrid.nodes[col][row].range.max = this.nodes[col][row].range.max;

@@ -1,6 +1,7 @@
 import java.util.Comparator;
 import java.util.Vector;
 import java.util.PriorityQueue;
+import java.util.LinkedList;
 
 class NodeComparator implements Comparator<Node>
 {
@@ -12,9 +13,25 @@ class NodeComparator implements Comparator<Node>
   }
 }
 
+class LexicalNodeComparator implements Comparator<Node>
+{
+  public int compare(Node source, Node target)
+  { 
+    if(source.f < target.f) return -1;
+    else if(source.f > target.f) return 1;
+    else
+    {
+      if(source.minG < target.minG) return -1;
+      else if(source.minG > target.minG) return 1;
+      else return 0;
+    }
+  }
+}
+
+
 interface PathPlanner
 {
-  public static final int DELAY = 10;
+  public static final int DELAY = 1000;
   public void run();
   public void start();
 }
@@ -47,7 +64,7 @@ class BasicTheta extends Thread implements PathPlanner
     if(t.g < gold)
     {
       if(open.contains(t)) open.remove(t);
-      t.f = t.g + t.dist(robot.start);
+      t.f = t.g + robot.knownMap.dist(t, robot.start);
       open.add(t);
     }
   }
@@ -142,7 +159,7 @@ class AStar extends Thread implements PathPlanner
     if(t.g < gold)
     {
       if(open.contains(t)) open.remove(t);
-      t.f = t.g + t.dist(robot.start);
+      t.f = t.g + robot.knownMap.dist(t, robot.start);
       open.add(t);
     }
   }
@@ -226,7 +243,7 @@ class Phi extends Thread implements PathPlanner
     if(t.g < gold)
     {
       if(open.contains(t)) open.remove(t);
-      t.f = t.g + t.dist(robot.start);
+      t.f = t.g + robot.knownMap.dist(t, robot.start);
       open.add(t);
     }
   }
@@ -305,5 +322,140 @@ class Phi extends Thread implements PathPlanner
 
     ComputeShortestPath();
     path = robot.knownMap.extractPath(robot.start.coordinate, robot.goal.coordinate);
+  }
+}
+
+class DStarLite extends Thread implements PathPlanner 
+{ 
+  private float km;
+  
+  public PriorityQueue<Node> open; // public for display purpose
+    
+  public LinkedList<PVector> path;
+  
+  Grid environment;
+  Agent robot;
+  
+  public DStarLite(Grid environment, int sensorRange, PVector start, PVector goal)
+  {
+    this.environment = environment;
+    
+    robot =  new Agent(environment, sensorRange, start, goal);
+    
+    Comparator<Node> nodeComparer = new LexicalNodeComparator();
+    open = new PriorityQueue<Node>(10, nodeComparer);
+    
+    km = 0.0;
+  }
+  
+  private Key CalculateKey(Node s) // if update is true, update variable f of that Node
+  {
+    return new Key(min(s.g, s.rhs) + robot.knownMap.dist(s, robot.start) + km, min(s.g, s.rhs));
+  }
+  
+  private boolean CompareKey(Key s, Key t) // Key(s) strictly less than Key(t) return true
+  {
+    if(s.k1 < t.k1) return true;
+    else if (s.k1 == t.k1 && s.k2 < t.k2) return true;
+    else return false;
+  }
+  
+  private void UpdateVertex(Node s)
+  {
+    if(s != robot.goal) 
+    {
+      for(Node next : robot.knownMap.neighborNodes(s, 1, false))
+      {
+        float c = robot.knownMap.cost(s, next) + next.g;
+        if(s.rhs > c) s.rhs = c;
+      }
+    }
+    
+    if(open.contains(s)) open.remove(s);
+    
+    if(s.g != s.rhs)
+    {
+      s.updateKey(CalculateKey(s));
+      open.add(s);
+    }
+  }
+  
+  private void ComputeShortestPath()
+  {
+    Node current;
+    while(open.size() != 0 && (CompareKey(open.peek().returnKey(), CalculateKey(robot.start)) || robot.start.g != robot.start.rhs))
+    {
+      current = open.poll();
+      Key oldKey = current.returnKey();
+      Key newKey = CalculateKey(current);
+      if(CompareKey(oldKey, newKey))
+      {
+        current.updateKey(newKey);
+        open.add(current);
+      }
+      else if (current.g > current.rhs)
+      {
+        current.g = current.rhs;
+        for(Node next : robot.knownMap.neighborNodes(current, 1, false))
+        {
+          UpdateVertex(next);
+        }
+      }
+      else
+      {
+        current.g = Float.POSITIVE_INFINITY;
+        
+        for(Node next : robot.knownMap.neighborNodes(current, 1, false))
+        {
+          UpdateVertex(next);
+        }
+        UpdateVertex(current);
+      }
+    }
+  }
+  
+  public void run()
+  {
+    robot.goal.rhs = 0.0;
+    robot.goal.updateKey(CalculateKey(robot.goal));
+    open.add(robot.goal);
+    
+    Node last = robot.start;
+
+    ComputeShortestPath();
+    path = robot.knownMap.extractLinkedPath(robot.start.coordinate, robot.goal.coordinate);
+    
+    while(robot.start != robot.goal)
+    {
+      path.pollFirst();
+      PVector nextPos = path.peekFirst();
+      robot.start = robot.knownMap.nodes[int(nextPos.x / robot.knownMap.res)][int(nextPos.y / robot.knownMap.res)];
+      
+      
+      Cell[] changes = robot.scan(environment, true);
+      if(changes.length != 0)
+      {
+        km += robot.knownMap.dist(last, robot.start);
+        last = robot.start;
+        for(Cell cell : changes)
+        {
+          for(Node node : cell.corners)
+          {
+            UpdateVertex(node);
+          }
+        }
+        
+        robot.start.f += 2; // this offset to widen the propagation of changed nodes, maybe this issue is because of floating point processing, must fix
+        ComputeShortestPath();
+        path = robot.knownMap.extractLinkedPath(robot.start.coordinate, robot.goal.coordinate);
+      }
+           
+      try
+      {
+        Thread.sleep(DELAY);
+      }
+      catch(Exception e) {}
+      
+    }
   }
 }
