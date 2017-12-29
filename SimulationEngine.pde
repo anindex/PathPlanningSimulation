@@ -30,23 +30,20 @@ void setup()
   //thetaPlanner = new BasicTheta(grid, 2, start.coordinate, goal.coordinate);
   //astarPlanner = new AStar(grid, 2, start.coordinate, goal.coordinate);
   //phiPlanner = new Phi(grid, 2, start.coordinate, goal.coordinate);
-  dlitePlanner = new DStarLite(grid, 2, start.coordinate, goal.coordinate);
+  
   
   //thetaPlanner.start();
   //astarPlanner.start();
   //phiPlanner.start();
-  dlitePlanner.start();
   
   try
   {
     //thetaPlanner.join();
     //astarPlanner.join();
     //phiPlanner.join();
-    //dlitePlanner.join();
   }
   catch(Exception e)
   {}
-  
 }
 
 void draw()
@@ -57,13 +54,14 @@ void draw()
     //if(thetaPlanner.path != null) grid.drawPath(thetaPlanner.path, ObjectColor.THETAPATH.getColor());
     //if(astarPlanner.path != null) grid.drawPath(astarPlanner.path);
     //if(phiPlanner.path != null) grid.drawPath(phiPlanner.path, ObjectColor.PHIPATH.getColor());
-    PVector[] dlitePath = new PVector[dlitePlanner.path.size()];
-    dlitePlanner.path.toArray(dlitePath);
-    grid.drawPath(dlitePath, ObjectColor.PATH.getColor());
-    grid.drawNodeColor(dlitePlanner.robot.start.coordinate, ObjectColor.START);
-    grid.drawNodeColor(dlitePlanner.robot.goal.coordinate, ObjectColor.GOAL);
+    if(dlitePlanner != null)
+    {
+      grid.drawPath(dlitePlanner.path, ObjectColor.PATH.getColor());
+      grid.drawNodeColor(dlitePlanner.robot.start.coordinate, ObjectColor.START);
+      grid.drawNodeColor(dlitePlanner.robot.goal.coordinate, ObjectColor.GOAL);
+      grid.drawProcessedNodes(dlitePlanner.processedNode);   
+    } 
   }
- 
 }
 
 void mouseClicked()
@@ -75,5 +73,14 @@ void mouseClicked()
   else if(mouseButton == RIGHT)
   {
     grid.rightMouseClicked(mouseX, mouseY);
+  }
+}
+
+void keyPressed()
+{
+  if(key == 'd')
+  {
+    dlitePlanner = new DStarLite(grid, 2, start.coordinate, goal.coordinate);
+    dlitePlanner.start();
   }
 }

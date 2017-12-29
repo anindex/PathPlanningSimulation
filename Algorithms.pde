@@ -13,7 +13,7 @@ class NodeComparator implements Comparator<Node>
   }
 }
 
-class LexicalNodeComparator implements Comparator<Node>
+class LexicalNodeComparator implements Comparator<Node> // fail to compare Lexical order
 {
   public int compare(Node source, Node target)
   { 
@@ -333,6 +333,8 @@ class DStarLite extends Thread implements PathPlanner
     
   public LinkedList<PVector> path;
   
+  public ArrayList<PVector> processedNode; // for debugging and simulating purpose
+  
   Grid environment;
   Agent robot;
   
@@ -344,6 +346,8 @@ class DStarLite extends Thread implements PathPlanner
     
     Comparator<Node> nodeComparer = new LexicalNodeComparator();
     open = new PriorityQueue<Node>(10, nodeComparer);
+    
+    processedNode = new ArrayList<PVector>();
     
     km = 0.0;
   }
@@ -364,11 +368,14 @@ class DStarLite extends Thread implements PathPlanner
   {
     if(s != robot.goal) 
     {
+      float m = Float.POSITIVE_INFINITY;
       for(Node next : robot.knownMap.neighborNodes(s, 1, false))
       {
         float c = robot.knownMap.cost(s, next) + next.g;
-        if(s.rhs > c) s.rhs = c;
+        if(m > c) m = c;
       }
+      
+      s.rhs = m;
     }
     
     if(open.contains(s)) open.remove(s);
@@ -383,9 +390,13 @@ class DStarLite extends Thread implements PathPlanner
   private void ComputeShortestPath()
   {
     Node current;
+    processedNode.clear();
+
     while(open.size() != 0 && (CompareKey(open.peek().returnKey(), CalculateKey(robot.start)) || robot.start.g != robot.start.rhs))
     {
       current = open.poll();
+      processedNode.add(current.coordinate); 
+      
       Key oldKey = current.returnKey();
       Key newKey = CalculateKey(current);
       if(CompareKey(oldKey, newKey))
@@ -423,10 +434,21 @@ class DStarLite extends Thread implements PathPlanner
     Node last = robot.start;
 
     ComputeShortestPath();
+    if(Float.isInfinite(robot.start.g)) 
+    {
+      println("[D*Lite]: Could not plan path!, All path are blocked!");
+      return;
+    }
     path = robot.knownMap.extractLinkedPath(robot.start.coordinate, robot.goal.coordinate);
     
     while(robot.start != robot.goal)
     {
+      if(path == null)
+      {
+        println("[D*Lite] Replanning failed! Exiting!");
+        return;
+      }
+      
       path.pollFirst();
       PVector nextPos = path.peekFirst();
       robot.start = robot.knownMap.nodes[int(nextPos.x / robot.knownMap.res)][int(nextPos.y / robot.knownMap.res)];
@@ -437,6 +459,7 @@ class DStarLite extends Thread implements PathPlanner
       {
         km += robot.knownMap.dist(last, robot.start);
         last = robot.start;
+        
         for(Cell cell : changes)
         {
           for(Node node : cell.corners)
@@ -445,9 +468,8 @@ class DStarLite extends Thread implements PathPlanner
           }
         }
         
-        robot.start.f += 2; // this offset to widen the propagation of changed nodes, maybe this issue is because of floating point processing, must fix
-        ComputeShortestPath();
-        path = robot.knownMap.extractLinkedPath(robot.start.coordinate, robot.goal.coordinate);
+        ComputeShortestPath(); //<>//
+        path = robot.knownMap.extractLinkedPath(robot.start.coordinate, robot.goal.coordinate); //<>//
       }
            
       try

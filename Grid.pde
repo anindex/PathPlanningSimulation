@@ -7,6 +7,7 @@ enum ObjectColor
 {
   START(0xFF0000FF), 
   GOAL(0xFF00FF00), 
+  PROCESS(0xFFFF0000),
   ARROW(0xFFFFA500), 
   PATH(0xFFFF0000),
   THETAPATH(0xFFFA0A00),
@@ -146,7 +147,7 @@ class Grid
        return null;
      }  
      
-     if(next == current)
+     if(pathNodes.contains(next.coordinate))
      {
        println("Path loop detected. Path is corrupted! Exiting");
        return null;
@@ -177,9 +178,9 @@ class Grid
        return null;
      }  
      
-     if(next == current)
+     if(pathNodes.contains(next.coordinate))
      {
-       println("Path loop detected. Path is corrupted! Exiting");
+       println("Path loop detected at" + next.coordinate + ". Path is corrupted! Exiting");
        return null;
      }
      
@@ -187,8 +188,16 @@ class Grid
    }
    
    pathNodes.add(goalNode.coordinate);
-   
    return pathNodes;
+ }
+ 
+ public void drawProcessedNodes(ArrayList<PVector> processedNode)
+ {
+   Iterator<PVector> it = processedNode.iterator();
+   while(it.hasNext())
+   {
+      drawNodeColor(it.next(), ObjectColor.PROCESS);
+   }
  }
  
  public void drawPath(PVector[] path, color pathColor)
@@ -199,6 +208,21 @@ class Grid
    for(int i = 0; i < path.length - 1; i++)
    {
      line(int(path[i].x), int(path[i].y), int(path[i + 1].x), int(path[i + 1].y));
+   }
+ }
+ 
+ public void drawPath(LinkedList<PVector> path, color pathColor)
+ {
+   if (path == null) return;
+   
+   stroke(pathColor);
+   Iterator<PVector> it = path.iterator();
+   PVector last = it.next();
+   while(it.hasNext())
+   {
+     PVector next = it.next();
+     line(int(last.x), int(last.y), int(next.x), int(next.y));
+     last = next;
    }
  }
   

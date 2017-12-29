@@ -45,7 +45,7 @@ class Agent
     
     for(int i = 0; i < knownNeighbors.length; i++)
     {
-      if(abs(knownNeighbors[i].cost - environmentNeighbors[i].cost) > 0.0001)
+      if(knownNeighbors[i].cost != environmentNeighbors[i].cost)
       {
         if(update)
         {
