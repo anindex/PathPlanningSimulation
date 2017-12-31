@@ -3,6 +3,7 @@ import java.util.Iterator;
 Grid grid;
 BasicTheta thetaPlanner;
 AStar astarPlanner;
+ARAStar arastarPlanner;
 Phi phiPlanner;
 DStarLite dlitePlanner;
 
@@ -12,7 +13,7 @@ Node start, goal;
 
 void setup()
 {
-  size(301, 301);
+  size(121, 121);
   
   try
   {
@@ -23,13 +24,14 @@ void setup()
     started = false;
   }
   
-  grid.randomCost(20);
-  start = grid.nodes[1][1];
-  goal = grid.nodes[14][14];
+  //grid.randomCost(20);
+  start = grid.nodes[6][6];
+  goal = grid.nodes[0][0];
   
   //thetaPlanner = new BasicTheta(grid, 2, start.coordinate, goal.coordinate);
   //astarPlanner = new AStar(grid, 2, start.coordinate, goal.coordinate);
   //phiPlanner = new Phi(grid, 2, start.coordinate, goal.coordinate);
+ 
   
   
   //thetaPlanner.start();
@@ -52,14 +54,20 @@ void draw()
   { 
     grid.drawMap();
     //if(thetaPlanner.path != null) grid.drawPath(thetaPlanner.path, ObjectColor.THETAPATH.getColor());
-    //if(astarPlanner.path != null) grid.drawPath(astarPlanner.path);
+    //if(astarPlanner.path != null) grid.drawPath(astarPlanner.path, ObjectColor.START.getColor());
     //if(phiPlanner.path != null) grid.drawPath(phiPlanner.path, ObjectColor.PHIPATH.getColor());
+    
+    if(arastarPlanner != null)
+    {
+      grid.drawPath(arastarPlanner.path, ObjectColor.PHIPATH.getColor());
+      grid.drawProcessedNodes(arastarPlanner.processedNode);   
+    }
     if(dlitePlanner != null)
     {
       grid.drawPath(dlitePlanner.path, ObjectColor.PATH.getColor());
       grid.drawNodeColor(dlitePlanner.robot.start.coordinate, ObjectColor.START);
       grid.drawNodeColor(dlitePlanner.robot.goal.coordinate, ObjectColor.GOAL);
-      grid.drawProcessedNodes(dlitePlanner.processedNode);   
+      //grid.drawProcessedNodes(dlitePlanner.processedNode);   
     } 
   }
 }
@@ -82,5 +90,10 @@ void keyPressed()
   {
     dlitePlanner = new DStarLite(grid, 2, start.coordinate, goal.coordinate);
     dlitePlanner.start();
+  }
+  else if(key == 'a')
+  {
+     arastarPlanner = new ARAStar(grid, 2, start.coordinate, goal.coordinate, 5.0);
+     arastarPlanner.start();
   }
 }

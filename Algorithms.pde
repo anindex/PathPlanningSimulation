@@ -325,6 +325,144 @@ class Phi extends Thread implements PathPlanner
   }
 }
 
+class ARAStar extends Thread implements PathPlanner 
+{ 
+  public float inflation;
+  
+  public PriorityQueue<Node> open; // public for display purpose
+  public Vector<Node> closed;
+  public Vector<Node> incons;
+  
+  public ArrayList<PVector> processedNode; // for display
+    
+  public PVector[] path;
+  
+  Grid environment;
+  Agent robot;
+  
+  public ARAStar(Grid environment, int sensorRange, PVector start, PVector goal, float inflation)
+  {
+    this.environment = environment;
+    this.inflation = inflation;
+    
+    robot =  new Agent(environment, sensorRange, start, goal);
+    
+    Comparator<Node> nodeComparer = new NodeComparator();
+    open = new PriorityQueue<Node>(10, nodeComparer);
+    closed = new Vector<Node>();
+    incons = new Vector<Node>();
+    processedNode = new ArrayList<PVector>();
+  }
+  
+  private void Key(Node s)
+  {
+    s.f = s.g + inflation * robot.knownMap.dist(s, robot.start);
+  }
+  
+  private void UpdateVertex(Node s, Node t)
+  {
+    float gold = t.g;
+    ComputeCost(s, t);
+    if(t.g < gold)
+    {
+      if(!closed.contains(t)) 
+      {
+        Key(t);
+        open.add(t);
+      }
+      else
+      {
+        incons.add(t);
+      }
+    }
+  }
+  
+  private void updateOpen()
+  {
+    ArrayList<Node> temp = new ArrayList<Node>();
+    while(open.size() != 0)
+    {
+      temp.add(open.poll());
+    }
+    
+    Iterator<Node> it = temp.iterator();
+    while(it.hasNext())
+    {
+      Node s = it.next();
+      Key(s);
+      open.add(s);
+    }
+  }
+  
+  private void ComputeCost(Node s, Node t)
+  {
+    float newCost = s.g + robot.knownMap.cost(s, t);
+    if(newCost < t.g)
+    {
+      t.parent = s;
+      t.localParent = s;
+      t.g = newCost;
+    }
+  }
+  
+  private void ImprovePath()
+  {
+    Node current;
+    processedNode.clear();
+    while(open.size() != 0 && open.peek().f < robot.start.g)
+    {
+      current = open.poll();
+      processedNode.add(current.coordinate);
+      closed.add(current);
+      
+      Node[] neighbors = robot.knownMap.neighborNodes(current, 1, false);
+      
+      for(Node next : neighbors)
+      {
+         UpdateVertex(current, next);
+      }
+    }
+  }
+  
+  public void run()
+  {
+    robot.goal.g = 0.0;
+    robot.goal.parent = robot.goal;
+    robot.goal.localParent = robot.goal;
+    Key(robot.goal);
+    open.add(robot.goal);
+
+    ImprovePath();
+    path = robot.knownMap.extractPath(robot.start.coordinate, robot.goal.coordinate);
+    
+    while(inflation > 1.0)
+    {
+      inflation -= 1.0;
+      
+      updateOpen();
+      Iterator<Node> it = incons.iterator();
+      while(it.hasNext())
+      {
+        Node s = it.next();
+        Key(s);
+        open.add(s);
+      }
+      
+      incons.clear();
+      closed.clear();
+      
+      ImprovePath();
+      path = robot.knownMap.extractPath(robot.start.coordinate, robot.goal.coordinate);
+      
+      try
+      {
+        Thread.sleep(DELAY);
+      }
+      catch(Exception e) {}
+    }
+  }
+}
+
 class DStarLite extends Thread implements PathPlanner 
 { 
   private float km;
