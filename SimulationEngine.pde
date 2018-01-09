@@ -6,6 +6,8 @@ AStar astarPlanner;
 ARAStar arastarPlanner;
 Phi phiPlanner;
 DStarLite dlitePlanner;
+ADStar adstarPlanner;
+IncrementalPhi incrementalPhiPlanner;
 
 public static final int RESOLUTION = 20;
 boolean started = true;
@@ -13,7 +15,7 @@ Node start, goal;
 
 void setup()
 {
-  size(121, 121);
+  size(301, 301);
   
   try
   {
@@ -24,9 +26,9 @@ void setup()
     started = false;
   }
   
-  //grid.randomCost(20);
-  start = grid.nodes[6][6];
-  goal = grid.nodes[0][0];
+  grid.randomCost(20);
+  start = grid.nodes[1][1];
+  goal = grid.nodes[14][14];
   
   //thetaPlanner = new BasicTheta(grid, 2, start.coordinate, goal.coordinate);
   //astarPlanner = new AStar(grid, 2, start.coordinate, goal.coordinate);
@@ -60,7 +62,12 @@ void draw()
     if(arastarPlanner != null)
     {
       grid.drawPath(arastarPlanner.path, ObjectColor.PHIPATH.getColor());
-      grid.drawProcessedNodes(arastarPlanner.processedNode);   
+    }
+    if(adstarPlanner != null)
+    {
+      grid.drawPath(adstarPlanner.path, ObjectColor.PATH.getColor());
+      grid.drawNodeColor(adstarPlanner.robot.start.coordinate, ObjectColor.START);
+      grid.drawNodeColor(adstarPlanner.robot.goal.coordinate, ObjectColor.GOAL);
     }
     if(dlitePlanner != null)
     {
@@ -69,6 +76,14 @@ void draw()
       grid.drawNodeColor(dlitePlanner.robot.goal.coordinate, ObjectColor.GOAL);
       //grid.drawProcessedNodes(dlitePlanner.processedNode);   
     } 
+    
+    if(incrementalPhiPlanner != null)
+    {
+      grid.drawPath(incrementalPhiPlanner.path, ObjectColor.PATH.getColor());
+      grid.drawNodeColor(incrementalPhiPlanner.robot.start.coordinate, ObjectColor.START);
+      grid.drawNodeColor(incrementalPhiPlanner.robot.goal.coordinate, ObjectColor.GOAL);
+      //grid.drawProcessedNodes(dlitePlanner.processedNode);   
+    }
   }
 }
 
@@ -95,5 +110,15 @@ void keyPressed()
   {
      arastarPlanner = new ARAStar(grid, 2, start.coordinate, goal.coordinate, 5.0);
      arastarPlanner.start();
+  }
+  else if(key == 'q')
+  {
+    adstarPlanner = new ADStar(grid, 2, start.coordinate, goal.coordinate, 5.0);
+    adstarPlanner.start();
+  }
+  else if(key == 'i')
+  {
+    incrementalPhiPlanner = new IncrementalPhi(grid, 2, start.coordinate, goal.coordinate);
+    incrementalPhiPlanner.start();
   }
 }

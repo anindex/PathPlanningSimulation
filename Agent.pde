@@ -35,7 +35,7 @@ class Agent
     this.sensorRange = sensorRange;
   }
   
-  public Cell[] scan(Grid environment, boolean update) // need check
+  public Cell[] scan(Grid environment, boolean update) //return both opened and blocked cells
   {
     ArrayList<Cell> changes = new ArrayList<Cell>();
     Cell[] knownNeighbors = knownMap.neighborCellsOfNode(start, sensorRange);
@@ -46,6 +46,60 @@ class Agent
     for(int i = 0; i < knownNeighbors.length; i++)
     {
       if(knownNeighbors[i].cost != environmentNeighbors[i].cost)
+      {
+        if(update)
+        {
+          knownNeighbors[i].cost = environmentNeighbors[i].cost;
+          knownNeighbors[i].gray = environmentNeighbors[i].gray;
+        }
+        
+        changes.add(knownNeighbors[i]);
+      }
+    }
+    
+    Cell[] result = new Cell[changes.size()];
+    changes.toArray(result);
+    return result;
+  }
+  
+  public Cell[] scanOpenedCell(Grid environment, boolean update) 
+  {
+    ArrayList<Cell> changes = new ArrayList<Cell>();
+    Cell[] knownNeighbors = knownMap.neighborCellsOfNode(start, sensorRange);
+    Cell[] environmentNeighbors = environment.neighborCellsOfNode(start, sensorRange); // possible because neighborNodes function extract the position Id of Node start, which is the same with environment
+    
+    if (knownNeighbors.length != environmentNeighbors.length) return null; // expect two array must be equal
+    
+    for(int i = 0; i < knownNeighbors.length; i++)
+    {
+      if(knownNeighbors[i].cost > environmentNeighbors[i].cost)
+      {
+        if(update)
+        {
+          knownNeighbors[i].cost = environmentNeighbors[i].cost;
+          knownNeighbors[i].gray = environmentNeighbors[i].gray;
+        }
+        
+        changes.add(knownNeighbors[i]);
+      }
+    }
+    
+    Cell[] result = new Cell[changes.size()];
+    changes.toArray(result);
+    return result;
+  }
+  
+  public Cell[] scanBlockedCell(Grid environment, boolean update)
+  {
+    ArrayList<Cell> changes = new ArrayList<Cell>();
+    Cell[] knownNeighbors = knownMap.neighborCellsOfNode(start, sensorRange);
+    Cell[] environmentNeighbors = environment.neighborCellsOfNode(start, sensorRange); // possible because neighborNodes function extract the position Id of Node start, which is the same with environment
+    
+    if (knownNeighbors.length != environmentNeighbors.length) return null; // expect two array must be equal
+    
+    for(int i = 0; i < knownNeighbors.length; i++)
+    {
+      if(knownNeighbors[i].cost < environmentNeighbors[i].cost)
       {
         if(update)
         {

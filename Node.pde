@@ -90,4 +90,14 @@ public class Node
     return target.coordinate != null ? (round(coordinate.dist(target.coordinate) * 10) / 10) : -1.0;
   }
   
+  void resetData()
+  {
+    parent = null;
+    localParent = null;
+    
+    g = Float.POSITIVE_INFINITY;
+    rhs = Float.POSITIVE_INFINITY;
+    
+    range = new AngleRange();
+  }
 }

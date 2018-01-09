@@ -162,6 +162,34 @@ class Grid
    return result;
  }
  
+ public LinkedList<PVector> extractLinkedPathSearchTree(PVector start, PVector goal) // all search algorithm from goal
+ {  
+   LinkedList<PVector> pathNodes = new LinkedList<PVector>();
+   Node current = this.nodes[int(start.x / res)][int(start.y / res)];
+   Node goalNode = this.nodes[int(goal.x / res)][int(goal.y / res)];
+   while(current != goalNode)
+   {
+     pathNodes.add(current.coordinate);
+     Node next = current.parent;
+     if(next == null)
+     {
+       println("Could not extract path. Path is broken! Exiting");
+       return null;
+     }  
+     
+     if(pathNodes.contains(next.coordinate))
+     {
+       println("Path loop detected. Path is corrupted! Exiting");
+       return null;
+     }
+     current = next;
+   }
+   
+   pathNodes.add(goalNode.coordinate);
+   
+   return pathNodes;
+ }
+ 
  public LinkedList<PVector> extractLinkedPath(PVector start, PVector goal) // all search algorithm from goal
  {  
    LinkedList<PVector> pathNodes = new LinkedList<PVector>();
