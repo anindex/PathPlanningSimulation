@@ -10,5 +10,4 @@ Implement grid decomposition environment to test various path planning algorithm
 
 ## Demo
 
-Video demo available here: 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/nAne4CkpFkY/0.jpg)](https://www.youtube.com/watch?v=nAne4CkpFkY)
