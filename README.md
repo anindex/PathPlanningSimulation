@@ -36,7 +36,7 @@ Please download Processing [here](https://processing.org/download/) and open the
 User can interactively click on the grid to add or clear blocked cell represented as black square (see in demo). The start and goal poses are always top left cell and bottom right cell, respectively.
 
 ### Changing grid size and resolution
-Resolution is the width of each cell. For instance, if the map is 15x15 cells and each cell has 20 pixels, then the corresponding configuration is as followed. The size of drawing window would be 15*20 + 1 = 301.
+Resolution is the width of each cell. For instance, if the map is 15x15 cells and each cell has 20 pixels, then the corresponding configuration is as followed in *PathPlanningSimulation.pde*. The size of drawing window would be 15*20 + 1 = 301.
 
 ```java
 
