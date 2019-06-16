@@ -4,9 +4,9 @@ The Path Planning Grid World is a simulation engine developed in Java, harnessin
 ## Motivation
 This simulation engine serves two purposes:
 - develop grid world simulation environment for evaluation of various path planning algorithms. Researchers can add their algorithms to test on the engine.
-- various criteria evaluation of path planning algorithms for the book chapter titled ![Search-Based Planning and Replanning in Robotics and Autonomous Systems](https://www.intechopen.com/books/advanced-path-planning-for-mobile-entities/search-based-planning-and-replanning-in-robotics-and-autonomous-systems).
+- various criteria evaluation of path planning algorithms for the book chapter titled [Search-Based Planning and Replanning in Robotics and Autonomous Systems](https://www.intechopen.com/books/advanced-path-planning-for-mobile-entities/search-based-planning-and-replanning-in-robotics-and-autonomous-systems).
 
-In the near future, the path planning simulation engine will be standalone framework to serve as test-bed for Motion Planning community. If you use this work for your research, please kindly cite as follow [![DOI](https://zenodo.org/badge/115075354.svg)](https://zenodo.org/badge/latestdoi/115075354).
+In the near future, the path planning simulation engine will be standalone framework to serve as test-bed for Motion Planning community. If you use this work for your research, please kindly cite as [![DOI](https://zenodo.org/badge/115075354.svg)](https://zenodo.org/badge/latestdoi/115075354).
 ## Implementation
 
 ### Implemented Modules:
