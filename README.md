@@ -28,6 +28,10 @@ In the near future, the path planning simulation engine will be standalone frame
 
 Detail UML for classes and architectures will be generated soon.
 
+### High-level Component Diagram
+
+![PathPlanningSim](https://user-images.githubusercontent.com/18066876/59590532-c8a4ec80-90db-11e9-8b28-842c451164e8.png)
+
 ## Usages
 
 ### Prerequisites
